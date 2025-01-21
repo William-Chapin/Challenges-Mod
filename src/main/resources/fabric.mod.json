@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "challenges",
+  "version": "${version}",
+  "name": "Challenges",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/challenges/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.bridging.challenges.client.ChallengesClient"
+    ],
+    "main": [
+      "com.bridging.challenges.Challenges"
+    ]
+  },
+  "mixins": [
+    "challenges.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
