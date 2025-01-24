@@ -11,6 +11,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.level.storage.LevelResource;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWCursorPosCallbackI;
 
@@ -40,10 +41,10 @@ public class EventHandler {
                 // Reinitialize challengeFileManager with the new world path
                 MinecraftServer server = Minecraft.getInstance().getSingleplayerServer();
                 if (server != null) {
-                    String worldName = server.getWorldData().getLevelName();
-                    Path gameDir = FabricLoader.getInstance().getGameDir();
-                    Path worldFolder = gameDir.resolve("saves").resolve(worldName);
-                    challengeFileManager = new ChallengeFileManager(worldFolder.toFile());
+                    // world path
+                    Path worldPath = server.getWorldPath(LevelResource.PLAYER_ADVANCEMENTS_DIR).getParent();
+                    System.out.println("[Challenges] World path: " + worldPath);
+                    challengeFileManager = new ChallengeFileManager(worldPath.toFile());
 
                     String savedChallenge = challengeFileManager.loadChallenge();
                     if ("None".equals(savedChallenge)) {
