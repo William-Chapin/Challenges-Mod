@@ -15,7 +15,7 @@ public class ChallengeManager {
         return challengeOptions.get(currentIndex).equals("No Inventory");
     }
 
-    public boolean isLockedHead(){
+    public boolean isNoMouse(){
         return challengeOptions.get(currentIndex).equals("No Mouse");
     }
 

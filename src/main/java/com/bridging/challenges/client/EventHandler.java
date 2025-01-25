@@ -1,12 +1,9 @@
 package com.bridging.challenges.client;
 
-import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
-import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -20,30 +17,21 @@ import java.nio.file.Path;
 public class EventHandler {
     private final ChallengeManager challengeManager;
     private ChallengeFileManager challengeFileManager;
-    private boolean hasOpened = false;
     private GLFWCursorPosCallbackI originalCursorPosCallback;
-    private static final KeyMapping openChallengeSelectionKey = new KeyMapping(
-            "Open Challenge Selection",
-            InputConstants.Type.KEYSYM,
-            GLFW.GLFW_KEY_C,
-            "Challenges"
-    );
+    private double initialX; // store initial coordinates for straight line challenge
+
 
     public EventHandler(ChallengeManager challengeManager) {
         this.challengeManager = challengeManager;
     }
 
     public void registerE() {
+        // Initialize ChallengeManager and ChallengeFileManager on world join
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
             if (client.level instanceof ClientLevel) {
-                hasOpened = false;
-
-                // Reinitialize challengeFileManager with the new world path
                 MinecraftServer server = Minecraft.getInstance().getSingleplayerServer();
                 if (server != null) {
-                    // world path
                     Path worldPath = server.getWorldPath(LevelResource.PLAYER_ADVANCEMENTS_DIR).getParent();
-                    System.out.println("[Challenges] World path: " + worldPath);
                     challengeFileManager = new ChallengeFileManager(worldPath.toFile());
 
                     String savedChallenge = challengeFileManager.loadChallenge();
@@ -58,29 +46,20 @@ public class EventHandler {
             }
         });
 
-        ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if (client.player != null && !hasOpened) {
-                if ("None".equals(challengeManager.getChallenge())) {
-                    Minecraft.getInstance().setScreen(new ChallengeSelection(challengeManager));
-                }
-                hasOpened = true;
-            }
-
-            while (openChallengeSelectionKey.consumeClick()) {
-                Minecraft.getInstance().setScreen(new ChallengeSelection(challengeManager));
-            }
-        });
-
+        // No Inventory Challenge
         ScreenEvents.AFTER_INIT.register((client, screen, width, height) -> {
             if (screen instanceof InventoryScreen && challengeManager.isNoInventory()) {
                 client.setScreen(null);
             }
         });
 
+        // No Mouse Challenge & No Keyboard Challenge
         ClientLifecycleEvents.CLIENT_STARTED.register(client -> {
             long windowHandle = Minecraft.getInstance().getWindow().getWindow();
+
+            // Manage No Mouse Challenge
             originalCursorPosCallback = GLFW.glfwSetCursorPosCallback(windowHandle, (window, xpos, ypos) -> {
-                if (challengeManager.isLockedHead() && (Minecraft.getInstance().screen == null)) {
+                if (challengeManager.isNoMouse() && (Minecraft.getInstance().screen == null)) {
                     return;
                 }
                 if (originalCursorPosCallback != null) {
@@ -88,11 +67,10 @@ public class EventHandler {
                 }
             });
 
+            // Manage No Keyboard Challenge
             GLFW.glfwSetKeyCallback(windowHandle, (window, key, scancode, action, mods) -> {
                 if (challengeManager.isNoKeyboard() && action != GLFW.GLFW_RELEASE) {
                     if (key == GLFW.GLFW_KEY_ESCAPE && (Minecraft.getInstance().screen instanceof ChallengeSelection)) {
-                        // do nothing
-                    } else if (openChallengeSelectionKey.matches(key, scancode)) {
                         // do nothing
                     } else {
                         return;
@@ -102,6 +80,25 @@ public class EventHandler {
             });
         });
 
+        // Straight Line Challenge
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            if (challengeManager.isStraightLine() && client.player != null) {
+                double playerX = client.player.getX();
+                double playerZ = client.player.getZ();
+
+                if (initialX == 0) {
+                    initialX = Math.floor(playerX) + 0.5;
+                    System.out.println("Initial X: " + initialX);
+                }
+
+                // prevent player movement past 0.5 from initialX
+                if (Math.abs(playerX - initialX) > 0.5) {
+                    client.player.setPos(initialX + (playerX > initialX ? 0.499 : -0.499), client.player.getY(), playerZ);
+                }
+            }
+        });
+
+        // Save Challenge on Disconnect
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             if (challengeFileManager != null) {
                 challengeFileManager.saveChallenge(challengeManager.getChallenge());
