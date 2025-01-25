@@ -8,6 +8,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.storage.LevelResource;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWCursorPosCallbackI;
@@ -19,7 +22,7 @@ public class EventHandler {
     private ChallengeFileManager challengeFileManager;
     private GLFWCursorPosCallbackI originalCursorPosCallback;
     private double initialX; // store initial coordinates for straight line challenge
-
+    private boolean initialXSet = false;
 
     public EventHandler(ChallengeManager challengeManager) {
         this.challengeManager = challengeManager;
@@ -86,14 +89,33 @@ public class EventHandler {
                 double playerX = client.player.getX();
                 double playerZ = client.player.getZ();
 
-                if (initialX == 0) {
+                if (!initialXSet) {
                     initialX = Math.floor(playerX) + 0.5;
+                    initialXSet = true;
                     System.out.println("Initial X: " + initialX);
                 }
 
-                // prevent player movement past 0.5 from initialX
-                if (Math.abs(playerX - initialX) > 0.5) {
-                    client.player.setPos(initialX + (playerX > initialX ? 0.499 : -0.499), client.player.getY(), playerZ);
+                // prevent player movement past 0.2 from initialX
+                if (Math.abs(playerX - initialX) > 0.4) {
+                    client.player.setPos(initialX + (playerX > initialX ? 0.4 : -0.4), client.player.getY(), playerZ);
+                }
+            }
+
+            // Blindness Challenge
+            if (challengeManager.isBlindness() && client.player != null){
+                client.player.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 100, 1));
+            }
+
+            if (!challengeManager.isBlindness() && client.player != null){
+                client.player.removeEffect(MobEffects.BLINDNESS);
+            }
+
+            // One Slot Challenge
+            if (challengeManager.isOneSlot() && client.player != null) {
+                for (int x = 1; x < 36; x++) {
+                    if (!client.player.getInventory().getItem(x).is(Items.BARRIER)) {
+                        client.player.getInventory().setItem(x, Items.BARRIER.getDefaultInstance());
+                    }
                 }
             }
         });
@@ -103,6 +125,10 @@ public class EventHandler {
             if (challengeFileManager != null) {
                 challengeFileManager.saveChallenge(challengeManager.getChallenge());
             }
+
+            // reset selected challenge
+            challengeManager.resetChallenge();
         });
+
     }
 }

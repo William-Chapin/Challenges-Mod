@@ -23,10 +23,10 @@ public class ChallengeSelection extends Screen {
         int x = (this.width - buttonW) / 2;
         int y = (this.height - buttonH) / 2;
 
-        String currentChallenge = challengeManager.getChallenge();
+        String currentChallenge = challengeManager.getSelectedChallenge();
         this.button = Button.builder(Component.literal(currentChallenge), button ->{
             challengeManager.nextChallenge();
-            String next = challengeManager.getChallenge();
+            String next = challengeManager.getSelectedChallenge();
             this.button.setMessage(Component.literal(next));
         }).bounds(x,y,buttonW,buttonH).build();
 
@@ -43,5 +43,11 @@ public class ChallengeSelection extends Screen {
     @Override
     public boolean isPauseScreen(){
         return false;
+    }
+
+    @Override
+    public void onClose() {
+        super.onClose();
+        challengeManager.applySelectedChallenge();
     }
 }
