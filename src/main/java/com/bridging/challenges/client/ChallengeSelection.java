@@ -10,38 +10,39 @@ public class ChallengeSelection extends Screen {
     private Component titleText;
     private final ChallengeManager challengeManager;
 
-    public ChallengeSelection(ChallengeManager challengeManager){
+    public ChallengeSelection(ChallengeManager challengeManager) {
         super(Component.literal("Challenge Selection"));
         this.titleText = Component.literal("Challenge Selection");
         this.challengeManager = challengeManager;
     }
 
     @Override
-    protected void init(){
+    protected void init() {
         int buttonW = 200;
         int buttonH = 20;
         int x = (this.width - buttonW) / 2;
         int y = (this.height - buttonH) / 2;
 
-        String currentChallenge = challengeManager.getSelectedChallenge();
-        this.button = Button.builder(Component.literal(currentChallenge), button ->{
+        ChallengeManager.Challenge currentChallenge = challengeManager.getSelectedChallenge();
+        this.button = Button.builder(Component.literal(currentChallenge.getDisplayName()), button -> {
             challengeManager.nextChallenge();
-            String next = challengeManager.getSelectedChallenge();
-            this.button.setMessage(Component.literal(next));
-        }).bounds(x,y,buttonW,buttonH).build();
+            ChallengeManager.Challenge next = challengeManager.getSelectedChallenge();
+            this.button.setMessage(Component.literal(next.getDisplayName()));
+        }).bounds(x, y, buttonW, buttonH).build();
 
         this.addRenderableWidget(this.button);
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta){
-        this.renderBackground(guiGraphics, mouseX, mouseY, delta);;
+    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
+        this.renderBackground(guiGraphics, mouseX, mouseY, delta);
+
         guiGraphics.drawCenteredString(this.font, this.titleText.getString(), this.width / 2, this.height / 2 - 40, 0xFFFFFF);
         super.render(guiGraphics, mouseX, mouseY, delta);
     }
 
     @Override
-    public boolean isPauseScreen(){
+    public boolean isPauseScreen() {
         return false;
     }
 
