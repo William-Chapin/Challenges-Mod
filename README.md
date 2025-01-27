@@ -18,5 +18,5 @@ Download the mod on this GitHub by clicking the releases tab. Then, put the jar 
 
 After launching your game, create a new world and you will be greeted with a screen to select what challenge you would like to attempt. Select a challenge by clicking through the several options and then close the menu to start! The challenge will save even if you leave the world and come back so you can continue your attempt later!
 ## Demo
-
+[GitHub won't embed it](https://cloud-hok5mug1r-hack-club-bot.vercel.app/00126_1_.gif) :(
 ![](https://cloud-hok5mug1r-hack-club-bot.vercel.app/00126_1_.gif)
